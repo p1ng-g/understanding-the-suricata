@@ -11,7 +11,7 @@ suricata流引擎分为流追踪引擎和流重组引擎。流追踪引擎跟踪
 **本文分析suricata的normal检测模式。**
 
 # 2 整体概览
-![](suricata-tcp-流重组.drawio.png)
+![](./contents/images/suricata-tcp-流重组.drawio.png)
 tcp流重组的主要过程：
 1. 收到tcp包之后，decode模块完成tcp协议头部的解析，然后把数据传递给FlowWork模块。
 2. FlowWork模块通过五元组管理会话，并把数据交给tcp流管理引擎处理。
