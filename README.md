@@ -1,4 +1,4 @@
-# Suricata 实现深度解析博客
+# Suricata 实现深度解析系列
 
 ## suricata version:
 2024.12.25 号从 master checkout 出来的分支。
