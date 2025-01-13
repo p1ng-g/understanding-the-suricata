@@ -1,6 +1,6 @@
 # 1 数据结构设计
 该图主要是模式串检测应用的数据结构设计，端口和预期表比较简单所以未画图。
-![](./contents/images/suricata-协议识别和解码.drawio1.png)
+![](./contents/images/suricata-协议识别和解码.drawio%201.png)
 # 2 概览
 应用识别主要分为3大步，**初始化，运行，注销。**
 
