@@ -1,5 +1,5 @@
 协议解码数据结构设计：
-![](./contents/images/suricata-协议解码.drawio%201.png)
+![](./contents/images/suricata-协议解码.drawio.png)
 
 识别到应用层协议之后，则可以把数据送入到对应的解码器进行协议解码。协议解码主要目的是还原协议关键字段，支持后续的规则检测和其他业务。
 
