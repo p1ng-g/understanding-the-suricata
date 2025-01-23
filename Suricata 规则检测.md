@@ -33,7 +33,7 @@ typedef struct SignatureInitData_ {
 } SignatureInitData;
 ```
 
-在检测引擎构建的 stage4 中，首先把同一个规则分组下的模式串预过滤条件聚合，这里使用位数组记录签名，构建 MpmStore 结构，然后调用 MpmStoreSetup 把预过滤模式串添加到多模匹配算法所管理的上下文中，对应 Mpmstore 中的成员 mpm_ctx。然后把该结构插入到检测引擎上下文中的哈希表中 。de_ctx->mpm_hash_table。
+在检测引擎构建的 stage4 中，首先把同一个规则分组下的用于预过滤的模式串聚合，这里使用位数组记录签名，构建 MpmStore 结构，然后调用 MpmStoreSetup 把预过滤模式串添加到多模匹配算法所管理的上下文中，对应 Mpmstore 中的成员 mpm_ctx。然后把该结构插入到检测引擎上下文中的哈希表中 。de_ctx->mpm_hash_table。
 
 ```c
 typedef struct MpmStore_ {
@@ -49,3 +49,61 @@ typedef struct MpmStore_ {
 
 } MpmStore;
 ```
+
+遍历添加模式串的代码位置：
+
+```c
+static void MpmStoreSetup(const DetectEngineCtx *de_ctx, MpmStore *ms)
+{
+// snip ---
+    /* add the patterns */
+    for (sig = 0; sig < (ms->sid_array_size * 8); sig++) {
+    // snip --
+                PopulateMpmHelperAddPattern(
+                        ms->mpm_ctx, cd, s, flags, (cd->flags & DETECT_CONTENT_FAST_PATTERN_CHOP));
+            }
+        }
+    }
+// snip ---
+```
+
+### 规则分组实现
+
+规则基于端口，协议进行分组。
+
+#### 基于端口分组
+
+端口使用 DetectPort 结构表示：
+
+```c
+typedef struct DetectPort_ {
+    uint16_t port;
+    uint16_t port2;
+
+    uint8_t flags;  /**< flags for this port */
+
+    /* signatures that belong in this group
+     *
+     * If the PORT_SIGGROUPHEAD_COPY flag is set, we don't own this pointer
+     * (memory is freed elsewhere).
+     */
+    struct SigGroupHead_ *sh;
+
+    struct DetectPort_ *prev;
+    struct DetectPort_ *next;
+    struct DetectPort_ *last; /* Pointer to the last node in the list */
+}   DetectPort;
+```
+
+使用 port，port2 可以实现表示单一端口，端口范围，多个端口则使用链表结构组织。
+sh 中记录了跟端口相关得规则，实现方式是使用位数组记录规则 id，最终基于端口分好的组挂载在 de_ctx->flow_gh 的 tcp udp 成员上。
+
+#### 基于协议的分组
+
+支持基于以下协议进行分组：
+
+1. 传输层协议：tcp, tcp-pkt, tcp-stream, udp, icmpv4, icmpv6, sctp
+2. 应用层协议：注册过协议解码的应用层协议，也即是支持解析的应用层协议。
+   ip 层协议被认为等同于 any。
+
+最终基于协议分好的组挂载在 de_ctx->flow_gh 的 sgh 指针数组上。
